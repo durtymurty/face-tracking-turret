@@ -51,6 +51,12 @@ pid_pan, pid_tilt = PID(), PID()
 pan, tilt = 90.0, 90.0          # start aimed at the center
 history = deque()               # past angle commands, used to fake the delay
 LOCK_RATIO, UNLOCK_MULT, SMOOTH = 0.4, 1.5, 0.7
+SCAN_DELAY = 1.5                # seconds without a face before scanning starts
+SCAN_SPEED = 60                 # degrees/second while sweeping
+SCAN_MIN, SCAN_MAX = 10, 170    # sweep limits (left/right)
+SCAN_ROWS = [90, 0, 180]        # tilt angles to sweep: middle, top, bottom
+last_seen, scan_dir = time.time(), 1   # when we last saw a face, sweep direction (1 = right, -1 = left)
+scan_row, scanning, last_dir = 0, False, 1
 track, locked, lost_frames = None, False, 0
 prev_time, fps = time.time(), 0.0
 
@@ -93,6 +99,7 @@ while True:
             target = min(boxes, key=lambda b: (b[0] + b[2] / 2 - tx) ** 2 + (b[1] + b[3] / 2 - ty) ** 2)
         track = target if track is None else SMOOTH * target + (1 - SMOOTH) * track
         lost_frames = 0
+        last_seen = now
     else:
         lost_frames += 1
         if lost_frames > 10:
@@ -119,9 +126,23 @@ while True:
         tilt_speed = max(-MAX_SPEED, min(MAX_SPEED, pid_tilt.update(err_y, dt)))
         pan = max(0, min(180, pan + pan_speed * dt))      # speed x time = how far it turned
         tilt = max(0, min(180, tilt + tilt_speed * dt))
-
+        last_dir = 1 if pan_speed >= 0 else -1            # which way they were heading
+        scanning = False
         cv2.rectangle(view, (x, y), (x + fw, y + fh), color, 2)
         cv2.line(view, (cx, cy), (fx, fy), color, 1)
+
+    # 3b) Nobody found for a while -> zigzag scan
+    if track is None and now - last_seen > SCAN_DELAY:
+        if not scanning:                                  # just started scanning
+            scanning, scan_dir, scan_row = True, last_dir, 0   # head where they were going first
+        status, color = "SCANNING", (255, 128, 0)
+        pan += scan_dir * SCAN_SPEED * dt
+        if pan >= SCAN_MAX or pan <= SCAN_MIN:            # hit the edge -> turn around, next row
+            pan = max(SCAN_MIN, min(SCAN_MAX, pan))
+            scan_dir *= -1
+            scan_row = (scan_row + 1) % len(SCAN_ROWS)
+        target_tilt = SCAN_ROWS[scan_row]
+        tilt += (target_tilt - tilt) * min(1, 3 * dt)     # glide to this row's height
 
     # 4) Draw everything
     cv2.drawMarker(view, (cx, cy), (255, 255, 255), cv2.MARKER_CROSS, 20, 1)
