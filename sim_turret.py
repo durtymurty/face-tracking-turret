@@ -43,9 +43,9 @@ def window_position(pan, tilt):
 # ---------- Sliders for live tuning ----------
 VIEW = "Turret view"
 cv2.namedWindow(VIEW)
-cv2.createTrackbar("KP x100", VIEW, 150, 500, lambda v: None)   # 1.50 to start
-cv2.createTrackbar("KI x100", VIEW, 0, 100, lambda v: None)     # 0 to start
-cv2.createTrackbar("KD x1000", VIEW, 50, 200, lambda v: None)   # 0.050 to start
+cv2.createTrackbar("KP x100", VIEW, 300, 500, lambda v: None)   # tuned: KP = 3.0
+cv2.createTrackbar("KI x100", VIEW, 0, 100, lambda v: None)     # leave at 0
+cv2.createTrackbar("KD x1000", VIEW, 60, 200, lambda v: None)   # tuned: KD = 0.060
 
 pid_pan, pid_tilt = PID(), PID()
 pan, tilt = 90.0, 90.0          # start aimed at the center
