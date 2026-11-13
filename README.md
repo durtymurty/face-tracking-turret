@@ -36,11 +36,12 @@ A pan/tilt turret that finds a face with computer vision and keeps it centered u
 - **Prediction:** at 350 ms of delay, tracking without prediction trails behind and overshoots, while prediction keeps the aim ahead of the target and settles faster.
 - **Jitter at rest:** detector noise of a few pixels caused constant small corrections, so a deadband on both error and target speed fixed it.
 
-## Files
 | File | What it does |
 |---|---|
-| `face_track.py` | Face detection + tracking on a fixed webcam |
-| `sim_turret.py` | Virtual turret with latency, scan mode, prediction, and live PID tuning |
+| `main.py` | Runs the loop: picks a turret (sim or real) and connects it to the tracker |
+| `tracker.py` | The brain: detection, PID, scan mode, prediction (hardware-independent) |
+| `sim_turret.py` | Virtual turret: webcam crop with simulated delay |
+| `face_track.py` | Original simple tracker on a fixed webcam |
 | `face_detection_yunet_2023mar.onnx` | YuNet face detection model (from OpenCV Zoo) |
 
 ## Run it
