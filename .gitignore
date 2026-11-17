@@ -1,0 +1,5 @@
+# WiFi password -- never upload
+esp32_camera/secrets.h
+
+# Python cache
+__pycache__/

@@ -1,7 +1,8 @@
 import cv2
 import time
 
-cap = cv2.VideoCapture(0)
+SOURCE = "http://172.20.10.6:81/stream"   # ESP32 camera; use 0 for the laptop webcam
+cap = cv2.VideoCapture(SOURCE)
 if not cap.isOpened():
     raise SystemExit("Couldn't open webcam")
 
@@ -97,7 +98,7 @@ while True:
     cv2.putText(frame, f"FPS {fps:.0f}", (w - 100, 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
-    cv2.imshow("Turret - press q to quit", frame)
+    cv2.imshow("Turret - press q to quit", cv2.resize(frame, None, fx=2.5, fy=2.5))
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
